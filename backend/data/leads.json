@@ -1,0 +1,66 @@
+[
+  {
+    "id": "demo_c22484be",
+    "name": "Test User",
+    "email": "test@example.com",
+    "phone": "+919876543210",
+    "target_role": "Analyst / Engineer",
+    "assessment_id": null,
+    "consultation_requested": true,
+    "preferred_date": "2026-09-20",
+    "preferred_time_slot": "Evening",
+    "tool_interest": "SailPoint IdentityIQ",
+    "notes": "Demo test",
+    "created_at": "2026-09-17T17:47:10.207600"
+  },
+  {
+    "id": "demo_735b3c34",
+    "name": "Test Candidate",
+    "email": "candidate@example.com",
+    "phone": "+919876543210",
+    "target_role": "Analyst / Engineer",
+    "assessment_id": null,
+    "consultation_requested": true,
+    "preferred_date": "2026-09-20",
+    "preferred_time_slot": "Evening",
+    "tool_interest": "SailPoint IdentityIQ",
+    "notes": "Testing demo booking",
+    "created_at": "2026-09-17T17:47:39.302014"
+  },
+  {
+    "name": "Alex Test",
+    "email": "alex@example.com",
+    "phone": "+919876543210",
+    "target_role": "Analyst / Engineer",
+    "experience_level": "Intermediate",
+    "assessment_id": null,
+    "consultation_requested": false,
+    "preferred_date": null,
+    "notes": null,
+    "id": "lead_a0d4da6c",
+    "created_at": "2026-09-17T18:01:51.237081"
+  },
+  {
+    "name": "Manasvi",
+    "email": "manasviyeole@gmail.com",
+    "phone": "",
+    "target_role": "Analyst / Engineer",
+    "experience_level": "Fresher / Student (< 1 Year)",
+    "assessment_id": "proc_cxd_bcb2bc4f",
+    "consultation_requested": true,
+    "notes": "Score: 90%",
+    "id": "lead_ef59ce6a",
+    "created_at": "2026-09-24T19:09:53.750Z"
+  },
+  {
+    "name": "Manasvi Manoj Yeole",
+    "email": "manasvi@gmail.com",
+    "phone": "",
+    "target_role": "Assessment Follow-up",
+    "experience_level": "Fresher / Student (< 1 Year)",
+    "consultation_requested": true,
+    "id": "demo_975bce16",
+    "created_at": "2026-09-24T18:27:03.965Z",
+    "notes": "Score: 90%"
+  }
+]
