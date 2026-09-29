@@ -87,6 +87,7 @@ export type ProctorEventType =
   | 'FACE_NOT_DETECTED'
   | 'MULTIPLE_FACES'
   | 'LOOKING_AWAY'
+  | 'CUMULATIVE_AWAY'
   | 'TAB_SWITCH'
   | 'WINDOW_BLUR'
   | 'FULLSCREEN_EXIT'

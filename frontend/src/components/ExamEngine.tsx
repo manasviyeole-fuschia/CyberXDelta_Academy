@@ -5,6 +5,9 @@ import {
 } from 'lucide-react';
 import type { QuestionPublic, AnswerSubmission, ProctorEvent, CandidateProfile, ProctorSeverity } from '../types';
 import { heartbeatProctorSessionApi, recordProctorEventApi } from '../services/api';
+import { useProctoring, type ProctorSignal } from '../proctoring/useProctoring';
+import { evaluateStrikes } from '../proctoring/strikeManager';
+import { WarningModal } from './WarningModal';
 
 interface ExamEngineProps {
   questions: QuestionPublic[];
@@ -47,6 +50,9 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
   const [activeWarning, setActiveWarning] = useState<string | null>(null);
   const [secondaryPerson, setSecondaryPerson] = useState<boolean>(false);
   const [phoneDetected, setPhoneDetected] = useState<boolean>(false);
+
+  const [strikeCount, setStrikeCount] = useState(0);
+  const [warningModalInfo, setWarningModalInfo] = useState<{ title: string; message: string; severity: ProctorSeverity } | null>(null);
 
   // Timed Warnings Triggered State
   const [warned10Min, setWarned10Min] = useState<boolean>(false);
@@ -125,7 +131,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
 
     const submissionList: AnswerSubmission[] = questions.map((q) => ({
       question_id: q.id,
-      selected_option: answers[q.id] ?? 0,
+      selected_option: answers[q.id] ?? -1,
       time_spent_seconds: 0
     }));
 
@@ -324,51 +330,67 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = questions.length - answeredCount;
   const markedCount = Object.values(markedForReview).filter(Boolean).length;
+  const handleProctorViolation = useCallback((type: ProctorEvent['event_type'], severity: ProctorSeverity, title: string, message: string) => {
+    setStrikeCount(prev => {
+      const newCount = prev + 1;
+      const action = evaluateStrikes(newCount);
+      
+      recordEvent(type, severity, `${title}: ${message}`, 1.0, 0, { strikeCount: newCount, action });
+      
+      if (action === 'TERMINATE') {
+        handleFinalSubmit(); // Auto terminate
+      } else {
+        setWarningModalInfo({ title, message, severity });
+      }
+      return newCount;
+    });
+  }, [recordEvent, handleFinalSubmit]);
 
-  // Simulator Triggers for Testing & Evaluation
-  const simulateLookingAway = () => {
-    recordEvent(
-      'LOOKING_AWAY',
-      'MEDIUM',
-      'Gaze Deviation Detected: Candidate looking off-screen for sustained period (>3.5s).',
-      0.92,
-      4.2
-    );
-  };
+  const handleProctorSignal = useCallback((s: ProctorSignal) => {
+    switch (s.type) {
+      case 'GAZE_NUDGE':
+        setActiveWarning('Please look back at the screen.');
+        setTimeout(() => setActiveWarning(null), 3000);
+        break;
+      case 'LOOKING_AWAY':
+        handleProctorViolation(
+          'LOOKING_AWAY', 'MEDIUM', 
+          'Looking Away', 
+          'You have been looking away from the screen for over 10 seconds. This is a violation.'
+        );
+        break;
+      case 'CUMULATIVE_AWAY':
+        recordEvent('CUMULATIVE_AWAY', 'MEDIUM', 'Cumulative looking away exceeded 60s.', 1.0, s.totalMs / 1000);
+        break;
+      case 'OBJECT_DETECTED':
+        setPhoneDetected(true);
+        setTimeout(() => setPhoneDetected(false), 3000);
+        handleProctorViolation(
+          'UNAUTHORIZED_OBJECT', 'CRITICAL',
+          `Unauthorized Object (${s.object})`,
+          `An unauthorized object (${s.object}) was detected in your camera view.`
+        );
+        break;
+      case 'MULTI_FACE':
+        setSecondaryPerson(true);
+        setTimeout(() => setSecondaryPerson(false), 3000);
+        handleProctorViolation(
+          'MULTIPLE_FACES', 'CRITICAL',
+          'Multiple Persons Detected',
+          'Another person was detected in your camera view. You must be alone.'
+        );
+        break;
+      case 'NO_FACE':
+        handleProctorViolation(
+          'FACE_NOT_DETECTED', 'MEDIUM',
+          'Face Not Detected',
+          'Your face has left the camera view. You must remain visible at all times.'
+        );
+        break;
+    }
+  }, [recordEvent, handleProctorViolation]);
 
-  const simulateMultipleFaces = () => {
-    setSecondaryPerson(true);
-    recordEvent(
-      'MULTIPLE_FACES',
-      'CRITICAL',
-      'Multiple Persons Detected: Secondary unauthorized face identified in camera view.',
-      0.97,
-      5.0
-    );
-    setTimeout(() => setSecondaryPerson(false), 5000);
-  };
-
-  const simulateNoFace = () => {
-    recordEvent(
-      'FACE_NOT_DETECTED',
-      'HIGH',
-      'Candidate Face Missing: No face detected in camera viewport (>3.0s).',
-      0.95,
-      3.8
-    );
-  };
-
-  const simulatePhoneObject = () => {
-    setPhoneDetected(true);
-    recordEvent(
-      'UNAUTHORIZED_OBJECT',
-      'CRITICAL',
-      'Prohibited Device Detected: Mobile smartphone recognized beside test canvas.',
-      0.94,
-      4.5
-    );
-    setTimeout(() => setPhoneDetected(false), 5000);
-  };
+  useProctoring(videoRef, !isSubmitting, handleProctorSignal);
 
   return (
     <div className="exam-engine-root" style={{ minHeight: '100vh', background: '#f7f8fa', color: '#101828', paddingBottom: 60 }}>
@@ -808,38 +830,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
               )}
             </div>
 
-            {/* Real-time Simulator Test Triggers (for Testing AI detections) */}
-            <div style={{ marginTop: 12, borderTop: '1px solid #eaecf0', paddingTop: 10 }}>
-              <div style={{ fontSize: 11, color: '#667085', marginBottom: 6, fontWeight: 600 }}>
-                ⚡ Test AI Detector Triggers (Demo):
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                <button
-                  onClick={simulateLookingAway}
-                  style={{ background: '#f8fafc', border: '1px solid #e4e7ec', color: '#344054', padding: '4px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}
-                >
-                  👀 Look Away
-                </button>
-                <button
-                  onClick={simulateMultipleFaces}
-                  style={{ background: '#f8fafc', border: '1px solid #e4e7ec', color: '#344054', padding: '4px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}
-                >
-                  👥 2nd Person
-                </button>
-                <button
-                  onClick={simulatePhoneObject}
-                  style={{ background: '#f8fafc', border: '1px solid #e4e7ec', color: '#344054', padding: '4px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}
-                >
-                  📱 Phone Object
-                </button>
-                <button
-                  onClick={simulateNoFace}
-                  style={{ background: '#f8fafc', border: '1px solid #e4e7ec', color: '#344054', padding: '4px 8px', borderRadius: 4, fontSize: 11, cursor: 'pointer' }}
-                >
-                  ❌ Face Missing
-                </button>
-              </div>
-            </div>
+
           </div>
 
           {/* Question Status Palette - Minimal Subtle White */}
@@ -1020,6 +1011,15 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
           </div>
         </div>
       )}
+
+      <WarningModal
+        isOpen={!!warningModalInfo}
+        title={warningModalInfo?.title || ''}
+        message={warningModalInfo?.message || ''}
+        strikeCount={strikeCount}
+        maxStrikes={3}
+        onAcknowledge={() => setWarningModalInfo(null)}
+      />
 
     </div>
   );

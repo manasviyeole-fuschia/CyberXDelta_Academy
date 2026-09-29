@@ -159,25 +159,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           📊 IAM Technical Readiness ({overallScore}%)
         </button>
 
-        <button
-          onClick={() => setActiveTab('proctor')}
-          style={{
-            background: activeTab === 'proctor' ? '#eff8ff' : 'transparent',
-            border: activeTab === 'proctor' ? '1px solid #b2ddff' : '1px solid transparent',
-            color: activeTab === 'proctor' ? '#155eef' : '#475467',
-            padding: '8px 16px',
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6
-          }}
-        >
-          <ShieldCheck size={16} color={riskScore < 25 ? '#12b76a' : riskScore < 60 ? '#f79009' : '#f04438'} />
-          <span>AI Proctoring Audit (Risk: {riskScore}/100)</span>
-        </button>
+
 
         <button
           onClick={() => setActiveTab('review')}
@@ -354,162 +336,6 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         </div>
       )}
 
-      {/* TAB 2: AI PROCTORING AUDIT REPORT */}
-      {activeTab === 'proctor' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          
-          {/* Risk Score & Evidence Header */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-            
-            {/* Risk Gauge Card */}
-            <div style={{
-              background: '#ffffff',
-              border: '1px solid #e4e7ec',
-              borderRadius: 16,
-              padding: 24,
-              textAlign: 'center',
-              boxShadow: '0 1px 3px rgba(16, 24, 40, 0.05)'
-            }}>
-              <span style={{
-                background: riskScore < 25 ? '#ecfdf3' : riskScore < 60 ? '#fffaeb' : '#fef3f2',
-                color: riskScore < 25 ? '#027a48' : riskScore < 60 ? '#b54708' : '#b42318',
-                padding: '3px 10px',
-                borderRadius: 12,
-                fontSize: 11,
-                fontWeight: 700
-              }}>
-                Proctoring Integrity Assessment
-              </span>
-              <div style={{
-                fontSize: 48,
-                fontWeight: 900,
-                color: riskScore < 25 ? '#12b76a' : riskScore < 60 ? '#f79009' : '#f04438',
-                margin: '10px 0'
-              }}>
-                {riskScore} <span style={{ fontSize: 18, color: '#667085' }}>/ 100</span>
-              </div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#101828', marginBottom: 6 }}>
-                Integrity Status: {riskLevel === 'Normal' ? '🟢 Verified Clean' : riskLevel === 'Needs Review' ? '🟡 Needs Review' : '🔴 Flagged For Review'}
-              </div>
-              <p style={{ fontSize: 13, color: '#475467', margin: 0 }}>
-                Risk computation evaluating persistent gaze deviations, window focus changes, and multi-person presence.
-              </p>
-            </div>
-
-            {/* Explainable Risk Category Breakdown */}
-            <div style={{
-              background: '#ffffff',
-              border: '1px solid #e4e7ec',
-              borderRadius: 16,
-              padding: 24,
-              boxShadow: '0 1px 3px rgba(16, 24, 40, 0.05)'
-            }}>
-              <h3 style={{ fontSize: 15, fontWeight: 700, color: '#101828', marginBottom: 14 }}>
-                Explainable Risk Breakdown
-              </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f2f4f7' }}>
-                  <span style={{ color: '#475467' }}>Browser Focus (Tab Swaps)</span>
-                  <span style={{ fontWeight: 700, color: riskBreakdown.tab_browser_score > 0 ? '#b54708' : '#027a48' }}>
-                    {riskBreakdown.tab_browser_score} pts
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f2f4f7' }}>
-                  <span style={{ color: '#475467' }}>Visual Gaze & Head Pose Deviations</span>
-                  <span style={{ fontWeight: 700, color: riskBreakdown.visual_gaze_score > 10 ? '#b54708' : '#027a48' }}>
-                    {riskBreakdown.visual_gaze_score} pts
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f2f4f7' }}>
-                  <span style={{ color: '#475467' }}>Secondary Person / Object Detection</span>
-                  <span style={{ fontWeight: 700, color: riskBreakdown.multi_person_score > 0 ? '#b42318' : '#027a48' }}>
-                    {riskBreakdown.multi_person_score} pts
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f2f4f7' }}>
-                  <span style={{ color: '#475467' }}>Audio & Speech Anomalies</span>
-                  <span style={{ fontWeight: 700, color: '#027a48' }}>
-                    {riskBreakdown.audio_anomaly_score} pts
-                  </span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                  <span style={{ color: '#475467' }}>Shortcut / Clipboard Tampering</span>
-                  <span style={{ fontWeight: 700, color: riskBreakdown.tampering_score > 0 ? '#b42318' : '#027a48' }}>
-                    {riskBreakdown.tampering_score} pts
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Chronological Event Timeline Log */}
-          <div style={{
-            background: '#ffffff',
-            border: '1px solid #e4e7ec',
-            borderRadius: 16,
-            padding: 24,
-            boxShadow: '0 1px 3px rgba(16, 24, 40, 0.05)'
-          }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: '#101828', marginBottom: 16 }}>
-              📋 Timestamped Proctoring Event Log ({events.length} Events)
-            </h3>
-
-            {events.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: '#027a48' }}>
-                <CheckCircle2 size={32} style={{ margin: '0 auto 8px', color: '#12b76a' }} />
-                <p style={{ fontWeight: 600, color: '#027a48' }}>Zero security violations recorded during this examination session.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {events.map((evt, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: 12,
-                      background: '#f8fafc',
-                      border: '1px solid #eaecf0',
-                      borderRadius: 10,
-                      flexWrap: 'wrap',
-                      gap: 12
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{
-                        padding: '3px 8px',
-                        borderRadius: 4,
-                        fontSize: 10,
-                        fontWeight: 800,
-                        background: evt.severity === 'CRITICAL' ? '#fef3f2' : evt.severity === 'HIGH' ? '#fffaeb' : '#eff8ff',
-                        color: evt.severity === 'CRITICAL' ? '#b42318' : evt.severity === 'HIGH' ? '#b54708' : '#175cd3',
-                        border: `1px solid ${evt.severity === 'CRITICAL' ? '#fda29b' : evt.severity === 'HIGH' ? '#fedf89' : '#b2ddff'}`
-                      }}>
-                        {evt.severity}
-                      </span>
-                      <div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#101828' }}>
-                          {evt.event_type.replace(/_/g, ' ')}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#475467' }}>
-                          {evt.description}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div style={{ fontSize: 12, color: '#667085', textAlign: 'right' }}>
-                      <div>{new Date(evt.timestamp).toLocaleTimeString()}</div>
-                      <div>Confidence: {Math.round(evt.confidence * 100)}%</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-        </div>
-      )}
 
       {/* TAB 3: QUESTION-BY-QUESTION REVIEW */}
       {activeTab === 'review' && (
@@ -519,15 +345,15 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               key={idx}
               style={{
                 background: '#ffffff',
-                border: `1px solid ${item.is_correct ? '#a6f4c5' : '#fda29b'}`,
+                border: `1px solid ${item.is_correct ? '#a6f4c5' : (item.selected_option === -1 ? '#fde68a' : '#fda29b')}`,
                 borderRadius: 14,
                 padding: 20,
                 boxShadow: '0 1px 3px rgba(16, 24, 40, 0.05)'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: item.is_correct ? '#027a48' : '#b42318' }}>
-                  {item.is_correct ? '✓ Correct Answer' : '✗ Incorrect Answer'}
+                <span style={{ fontSize: 12, fontWeight: 700, color: item.is_correct ? '#027a48' : (item.selected_option === -1 ? '#b54708' : '#b42318') }}>
+                  {item.is_correct ? '✓ Correct Answer' : (item.selected_option === -1 ? '⚠ Unattempted' : '✗ Incorrect Answer')}
                 </span>
                 <span style={{ background: '#f2f4f7', color: '#344054', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>
                   {item.domain}
@@ -538,7 +364,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
               </h4>
 
               <div style={{ fontSize: 13, color: '#344054', marginBottom: 6 }}>
-                <strong>Your Selected Answer:</strong> {item.options[item.selected_option] || 'No answer selected'}
+                <strong>Your Selected Answer:</strong> {item.selected_option === -1 ? 'Not Attempted' : item.options[item.selected_option]}
               </div>
               {!item.is_correct && (
                 <div style={{ fontSize: 13, color: '#027a48', marginBottom: 6 }}>
@@ -823,7 +649,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
                 }}
               >
                 <MessageCircle size={18} />
-                <span>Redirect to WhatsApp for Requirements (+91 8972065508)</span>
+                <span>WhatsApp</span>
               </a>
 
               <button

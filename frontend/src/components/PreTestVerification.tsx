@@ -4,6 +4,7 @@ import {
   AlertCircle, CheckCircle2, RefreshCw, Sparkles, User, Mail, IdCard
 } from 'lucide-react';
 import type { CandidateProfile, PreTestChecksState } from '../types';
+import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
 
 interface PreTestVerificationProps {
   selectedRole: string;
@@ -46,6 +47,8 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const faceDetectorRef = useRef<FaceDetector | null>(null);
+  const faceAnimFrameRef = useRef<number | null>(null);
 
   // Validate Authentication Form
   useEffect(() => {
@@ -125,30 +128,82 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
     }
   };
 
-  // Perform AI Face Detection Simulation / Frame Analysis
+  // Initialize FaceDetector
+  useEffect(() => {
+    const initModel = async () => {
+      try {
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.12/wasm"
+        );
+        const detector = await FaceDetector.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite",
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO"
+        });
+        faceDetectorRef.current = detector;
+      } catch (err) {
+        console.error("FaceDetector initialization failed", err);
+      }
+    };
+    initModel();
+  }, []);
+
+  // Perform AI Face Detection Frame Analysis
   const evaluateFaceDetection = () => {
-    setTimeout(() => {
-      setChecks(prev => ({ ...prev, facePassed: true, singlePersonPassed: true }));
-      captureIdSnapshot();
-    }, 1000);
+    let lastVideoTime = -1;
+    const analyzeFrame = () => {
+      if (videoRef.current && faceDetectorRef.current && videoRef.current.readyState >= 2) {
+        if (videoRef.current.currentTime !== lastVideoTime) {
+          lastVideoTime = videoRef.current.currentTime;
+          try {
+            const detections = faceDetectorRef.current.detectForVideo(videoRef.current, performance.now());
+            if (detections.detections.length === 1) {
+              setChecks(prev => {
+                if (!prev.facePassed || !prev.singlePersonPassed) {
+                  return { ...prev, facePassed: true, singlePersonPassed: true };
+                }
+                return prev;
+              });
+              captureIdSnapshot();
+            } else {
+              setChecks(prev => {
+                if (prev.facePassed || prev.singlePersonPassed) {
+                  return { ...prev, facePassed: false, singlePersonPassed: false };
+                }
+                return prev;
+              });
+            }
+          } catch(e) {
+            console.warn(e);
+          }
+        }
+      }
+      faceAnimFrameRef.current = requestAnimationFrame(analyzeFrame);
+    };
+    analyzeFrame();
   };
 
   // Capture Verification Photo Snapshot from live feed
   const captureIdSnapshot = () => {
     if (!videoRef.current) return;
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 320;
-      canvas.height = 240;
-      const ctx = canvas.getContext('2d');
-      if (ctx && videoRef.current) {
-        ctx.drawImage(videoRef.current, 0, 0, 320, 240);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        setCapturedPhoto(dataUrl);
+    setCapturedPhoto(prev => {
+      if (prev) return prev; // Capture only once
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 320;
+        canvas.height = 240;
+        const ctx = canvas.getContext('2d');
+        if (ctx && videoRef.current) {
+          ctx.drawImage(videoRef.current, 0, 0, 320, 240);
+          return canvas.toDataURL('image/jpeg', 0.85);
+        }
+      } catch (e) {
+        console.warn("Photo snapshot capture error", e);
       }
-    } catch (e) {
-      console.warn("Photo snapshot capture error", e);
-    }
+      return null;
+    });
   };
 
   // Run Network Latency & Ping Check
@@ -191,7 +246,9 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
     return () => {
       document.removeEventListener('fullscreenchange', handleFsChange);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+      if (faceAnimFrameRef.current) cancelAnimationFrame(faceAnimFrameRef.current);
       if (audioContextRef.current) audioContextRef.current.close().catch(() => {});
+      if (faceDetectorRef.current) faceDetectorRef.current.close();
     };
   }, []);
 
