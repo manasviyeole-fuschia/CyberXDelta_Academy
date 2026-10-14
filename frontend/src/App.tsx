@@ -12,6 +12,25 @@ import { ExamEngine } from './components/ExamEngine';
 import { ResultsDashboard } from './components/ResultsDashboard';
 import { AdminProctorCenter } from './components/AdminProctorCenter';
 
+const MAX_RETAKES = 3;
+
+const getStoredRetakes = (email?: string): number => {
+  if (!email) return 0;
+  try {
+    const val = localStorage.getItem(`cxd_retakes_${email.trim().toLowerCase()}`);
+    return val ? parseInt(val, 10) : 0;
+  } catch {
+    return 0;
+  }
+};
+
+const storeRetakes = (email: string, count: number) => {
+  if (!email) return;
+  try {
+    localStorage.setItem(`cxd_retakes_${email.trim().toLowerCase()}`, count.toString());
+  } catch {}
+};
+
 export function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('landing');
   const [selectedRole, setSelectedRole] = useState<string>('Analyst / Engineer');
@@ -19,6 +38,7 @@ export function App() {
   const [candidateProfile, setCandidateProfile] = useState<CandidateProfile | null>(null);
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [sessionId, setSessionId] = useState<string>('');
+  const [retakeCount, setRetakeCount] = useState<number>(0);
   
   // Evaluation & Results State
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
@@ -46,13 +66,24 @@ export function App() {
 
   // 3. Pre-Test Verification Completed -> Initialize Session and Launch 30-Min Exam
   const handleVerificationComplete = async (profile: CandidateProfile, stream: MediaStream) => {
+    const emailKey = profile.email?.trim().toLowerCase();
+    const storedCount = getStoredRetakes(emailKey);
+    const activeRetakes = Math.max(retakeCount, storedCount);
+
+    if (activeRetakes > MAX_RETAKES) {
+      alert("Maximum Retake Limit Reached!");
+      return;
+    }
+
+    setRetakeCount(activeRetakes);
     setLoading(true);
-    setCandidateProfile(profile);
+    setCandidateProfile({ ...profile, retake_count: activeRetakes });
     setMediaStream(stream);
 
     try {
-      // Fetch relevant questions for target role
-      const qList = await fetchQuestions(profile.targetRole, profile.experienceLevel);
+      // Dynamic question order: shuffle if this is a retake (activeRetakes > 0)
+      const shouldShuffle = activeRetakes > 0;
+      const qList = await fetchQuestions(profile.targetRole, profile.experienceLevel, shouldShuffle);
       setQuestions(qList);
 
       // Initialize proctor session with backend
@@ -63,14 +94,18 @@ export function App() {
         target_role: profile.targetRole,
         experience_level: profile.experienceLevel,
         test_duration_minutes: 30,
-        verification_snapshot: profile.photoSnapshot
+        verification_snapshot: profile.photoSnapshot,
+        retake_count: activeRetakes
       });
 
       setSessionId(session.session_id);
       setCurrentScreen('quiz');
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (e) {
+    } catch (e: any) {
       console.error("Exam init error:", e);
+      if (e?.message?.includes("Maximum retake limit")) {
+        alert(e.message);
+      }
     }
     setLoading(false);
   };
@@ -117,10 +152,48 @@ export function App() {
     setLoading(false);
   };
 
-  // Reset / Retake
+  // Retake Test (Limit to 3 retakes; Retain candidate name & email, go to Pre-Test Verification)
+  const handleRetake = () => {
+    const emailKey = candidateProfile?.email?.trim().toLowerCase();
+    const currentRetakes = emailKey ? Math.max(retakeCount, getStoredRetakes(emailKey)) : retakeCount;
+
+    if (currentRetakes >= MAX_RETAKES) {
+      alert("Maximum Retake Limit Reached!");
+      return;
+    }
+
+    const nextRetakeCount = currentRetakes + 1;
+    setRetakeCount(nextRetakeCount);
+    if (emailKey) {
+      storeRetakes(emailKey, nextRetakeCount);
+    }
+
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      setMediaStream(null);
+    }
+
+    // Reset session and assessment data for the fresh retake
+    setQuestions([]);
+    setAssessmentResult(null);
+    setSubmittedLead(null);
+    setProctorEvents([]);
+    setRiskScore(0);
+    setRiskLevel('Normal');
+    setRiskBreakdown(undefined);
+    setTimeSpentSeconds(0);
+    setSessionId('');
+
+    // Retain candidate name, email & selected role, navigate directly to Pre-Test Verification
+    setCurrentScreen('precheck');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to Landing
   const handleReset = () => {
     if (mediaStream) {
       mediaStream.getTracks().forEach(track => track.stop());
+      setMediaStream(null);
     }
     setCurrentScreen('landing');
     setQuestions([]);
@@ -158,6 +231,9 @@ export function App() {
         {!loading && currentScreen === 'precheck' && (
           <PreTestVerification
             selectedRole={selectedRole}
+            initialProfile={candidateProfile}
+            retakeCount={retakeCount}
+            maxRetakes={MAX_RETAKES}
             onVerificationComplete={handleVerificationComplete}
             onCancel={handleReset}
           />
@@ -170,6 +246,7 @@ export function App() {
             candidateProfile={candidateProfile}
             mediaStream={mediaStream}
             sessionId={sessionId}
+            retakeCount={retakeCount}
             onFinishExam={handleFinishExam}
             onExit={handleReset}
           />
@@ -185,7 +262,9 @@ export function App() {
             riskBreakdown={riskBreakdown}
             timeSpentSeconds={timeSpentSeconds}
             verificationSnapshot={candidateProfile?.photoSnapshot}
-            onRetake={handleReset}
+            retakeCount={retakeCount}
+            maxRetakes={MAX_RETAKES}
+            onRetake={handleRetake}
           />
         )}
       </main>
@@ -200,3 +279,4 @@ export function App() {
 }
 
 export default App;
+

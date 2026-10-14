@@ -15,6 +15,7 @@ interface ExamEngineProps {
   candidateProfile: CandidateProfile;
   mediaStream: MediaStream | null;
   sessionId: string;
+  retakeCount?: number;
   onFinishExam: (submission: {
     answers: AnswerSubmission[];
     events: ProctorEvent[];
@@ -32,6 +33,7 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
   candidateProfile,
   mediaStream,
   sessionId,
+  retakeCount = 0,
   onFinishExam
 }) => {
   // Test State
@@ -52,7 +54,35 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
   const [phoneDetected, setPhoneDetected] = useState<boolean>(false);
 
   const [strikeCount, setStrikeCount] = useState(0);
+  const [isFullScreen, setIsFullScreen] = useState<boolean>(() => !!document.fullscreenElement);
+  const [isWindowFocused, setIsWindowFocused] = useState<boolean>(true);
   const [warningModalInfo, setWarningModalInfo] = useState<{ title: string; message: string; severity: ProctorSeverity } | null>(null);
+  const awayStartTimeRef = useRef<number | null>(null);
+  const blurStartTimeRef = useRef<number | null>(null);
+  const tabSwitchCountRef = useRef<number>(0);
+  const awayWatchdogTimerRef = useRef<any>(null);
+
+  // Synthesize instant audible security alarm for tamper events
+  const playSecurityAlarm = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.35);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch {
+      // AudioContext may be restricted by browser policy before interaction
+    }
+  }, []);
 
   // Timed Warnings Triggered State
   const [warned10Min, setWarned10Min] = useState<boolean>(false);
@@ -216,56 +246,229 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
     }
   }, [mediaStream]);
 
+  // Re-enter Fullscreen Handler
+  const reEnterFullscreen = useCallback(async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      setIsFullScreen(true);
+      setIsWindowFocused(true);
+    } catch (err) {
+      console.warn("Fullscreen request error:", err);
+      setIsFullScreen(!!document.fullscreenElement);
+    }
+  }, []);
+
+  // Central Proctor Violation Handler (Strikes, Audit Logging, Auto-Submission)
+  const handleProctorViolation = useCallback((type: ProctorEvent['event_type'], severity: ProctorSeverity, title: string, message: string) => {
+    if (isSubmitting) return;
+
+    setStrikeCount(prev => {
+      const newCount = prev + 1;
+      const action = evaluateStrikes(newCount);
+      
+      recordEvent(type, severity, `${title}: ${message}`, 1.0, 0, { strikeCount: newCount, action });
+      
+      if (action === 'TERMINATE' || newCount >= 3) {
+        setWarningModalInfo({ 
+          title: "Exam Terminated: Multiple Security Breaches", 
+          message: "You have accumulated security violation strikes for unauthorized tab switching and/or dropping full-screen lockdown. Your examination is now permanently locked and submitted for administrative integrity review.", 
+          severity: 'CRITICAL' 
+        });
+        setTimeout(() => {
+          handleFinalSubmit();
+        }, 2200);
+      } else {
+        setWarningModalInfo({ title, message, severity });
+      }
+      return newCount;
+    });
+  }, [recordEvent, handleFinalSubmit, isSubmitting]);
+
   // Anti-Tampering: Tab Switching & Fullscreen Exit Listeners
   useEffect(() => {
+    // Initial check: ensure fullscreen on mount
+    if (!document.fullscreenElement && !isSubmitting) {
+      setIsFullScreen(false);
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullScreen(true);
+      }).catch(() => {
+        setIsFullScreen(false);
+      });
+    }
+
     const handleVisibilityChange = () => {
+      if (isSubmitting) return;
+
       if (document.hidden) {
+        // Candidate switched away from active exam tab
+        playSecurityAlarm();
+        awayStartTimeRef.current = Date.now();
+        tabSwitchCountRef.current += 1;
+        const currentTabSwitches = tabSwitchCountRef.current;
+
         recordEvent(
           'TAB_SWITCH',
-          'HIGH',
-          'Exam Window Focus Lost: Candidate switched away from active exam tab.',
+          'CRITICAL',
+          `Exam Tab Switched: Navigated away from active examination tab (Violation #${currentTabSwitches}).`,
           0.99,
-          3.0
+          1.0
         );
+
+        // Immediate termination if tab switch limit reached (Max 1 warning grace; 2nd tab switch = TERMINATE)
+        if (currentTabSwitches >= 2) {
+          handleProctorViolation(
+            'TAB_SWITCH',
+            'CRITICAL',
+            'Exam Terminated: Repeated Tab Switching Violation',
+            'Multiple unauthorized tab switches intercepted. Tab switching is strictly prohibited during proctored examinations. Your session is now terminated and submitted.'
+          );
+          return;
+        }
+
+        // Live Watchdog: If away for > 5 seconds, auto-terminate in the background
+        if (awayWatchdogTimerRef.current) clearInterval(awayWatchdogTimerRef.current);
+        awayWatchdogTimerRef.current = setInterval(() => {
+          if (document.hidden && awayStartTimeRef.current) {
+            const awaySecs = Math.round((Date.now() - awayStartTimeRef.current) / 1000);
+            if (awaySecs >= 5) {
+              clearInterval(awayWatchdogTimerRef.current);
+              handleProctorViolation(
+                'TAB_SWITCH',
+                'CRITICAL',
+                'Exam Terminated: Extended Absence from Exam Tab',
+                `You were away from the examination tab for more than 5 seconds (${awaySecs}s). External browsing and multi-tab usage are strictly forbidden. Session terminated.`
+              );
+            }
+          }
+        }, 500);
+      } else {
+        // Candidate returned from another tab
+        if (awayWatchdogTimerRef.current) {
+          clearInterval(awayWatchdogTimerRef.current);
+          awayWatchdogTimerRef.current = null;
+        }
+        const awayMs = awayStartTimeRef.current ? Date.now() - awayStartTimeRef.current : 0;
+        awayStartTimeRef.current = null;
+        const awaySecs = Math.max(1, Math.round(awayMs / 1000));
+
+        if (tabSwitchCountRef.current >= 2) {
+          return;
+        }
+
+        handleProctorViolation(
+          'TAB_SWITCH',
+          'CRITICAL',
+          'Critical Violation: Tab Switching Intercepted',
+          `You navigated away from the active examination tab for ${awaySecs} second(s). Tab switching is strictly forbidden. WARNING: You have 1 final strike; any further tab or window switch will trigger immediate automatic exam disqualification.`
+        );
+
+        if (!document.fullscreenElement) {
+          setIsFullScreen(false);
+        }
       }
     };
 
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement && !isSubmitting) {
-        recordEvent(
+      if (isSubmitting) return;
+
+      if (!document.fullscreenElement) {
+        setIsFullScreen(false);
+        playSecurityAlarm();
+        handleProctorViolation(
           'FULLSCREEN_EXIT',
-          'MEDIUM',
-          'Fullscreen Mode Exited: Candidate dropped full-screen lockdown.',
-          0.95,
-          2.0
+          'HIGH',
+          'Full-Screen Mode Exited',
+          'You exited dedicated full-screen mode. The test interface is locked and obscured until full-screen integrity is restored. Tab and screen switching are strictly forbidden.'
         );
+      } else {
+        setIsFullScreen(true);
       }
     };
 
     const handleWindowBlur = () => {
-      if (!document.hidden) {
-        recordEvent(
-          'WINDOW_BLUR',
-          'LOW',
-          'Application focus shifted away from test canvas.',
-          0.90,
-          1.5
-        );
+      if (isSubmitting) return;
+      setIsWindowFocused(false);
+      playSecurityAlarm();
+      blurStartTimeRef.current = Date.now();
+      recordEvent(
+        'WINDOW_BLUR',
+        'HIGH',
+        'Window Focus Lost: Exam window lost focus to an external application or screen.',
+        0.95,
+        1.0
+      );
+
+      // Start focus loss watchdog: if blurred for > 5 seconds, auto-terminate
+      if (awayWatchdogTimerRef.current) clearInterval(awayWatchdogTimerRef.current);
+      awayWatchdogTimerRef.current = setInterval(() => {
+        if (blurStartTimeRef.current) {
+          const blurSecs = Math.round((Date.now() - blurStartTimeRef.current) / 1000);
+          if (blurSecs >= 5) {
+            clearInterval(awayWatchdogTimerRef.current);
+            handleProctorViolation(
+              'WINDOW_BLUR',
+              'CRITICAL',
+              'Exam Terminated: Extended Window Focus Loss',
+              `Application focus was lost for more than 5 seconds (${blurSecs}s). Dual-monitor and external application usage are strictly prohibited.`
+            );
+          }
+        }
+      }, 500);
+    };
+
+    const handleWindowFocus = () => {
+      if (isSubmitting) return;
+      setIsWindowFocused(true);
+      if (awayWatchdogTimerRef.current) {
+        clearInterval(awayWatchdogTimerRef.current);
+        awayWatchdogTimerRef.current = null;
       }
+      if (blurStartTimeRef.current) {
+        const blurMs = Date.now() - blurStartTimeRef.current;
+        blurStartTimeRef.current = null;
+        const blurSecs = Math.round(blurMs / 1000);
+        if (blurSecs >= 1) {
+          handleProctorViolation(
+            'WINDOW_BLUR',
+            'HIGH',
+            'Window Focus Lost',
+            `Application focus shifted away from the examination window for ${blurSecs}s. Dual monitors and background applications are strictly prohibited.`
+          );
+        }
+      }
+    };
+
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (isSubmitting) return;
+      if (e.clientY <= 2) {
+        setActiveWarning('⚠️ Proctor Boundary Warning: Cursor left exam viewport towards browser tabs/controls. Keep cursor inside the examination canvas.');
+      }
+    };
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSubmitting) return;
+      e.preventDefault();
+      e.returnValue = 'Leaving or closing the examination will result in immediate disqualification.';
+      return e.returnValue;
     };
 
     // Keyboard and Clipboard Tamper Prevention
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
-        (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 'a' || e.key === 'p')) ||
+        (e.ctrlKey && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 'a' || e.key === 'p' || e.key === 't' || e.key === 'n' || e.key === 'w' || e.key === 'r' || e.key === 'Tab')) ||
+        (e.altKey && e.key === 'Tab') ||
+        e.key === 'F11' ||
         e.key === 'F12' ||
+        e.key === 'F5' ||
         (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C'))
       ) {
         e.preventDefault();
         recordEvent(
           'TAMPER_SHORTCUT',
           'HIGH',
-          `Prohibited shortcut attempt intercepted (${e.ctrlKey ? 'Ctrl+' : ''}${e.key}).`,
+          `Prohibited shortcut attempt intercepted (${e.ctrlKey ? 'Ctrl+' : ''}${e.altKey ? 'Alt+' : ''}${e.key}).`,
           1.0,
           0
         );
@@ -286,17 +489,24 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
     document.addEventListener('visibilitychange', handleVisibilityChange);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
+    document.addEventListener('mouseleave', handleMouseLeave);
+    window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('contextmenu', handleContextMenu);
 
     return () => {
+      if (awayWatchdogTimerRef.current) clearInterval(awayWatchdogTimerRef.current);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+      document.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('contextmenu', handleContextMenu);
     };
-  }, [recordEvent, isSubmitting]);
+  }, [handleProctorViolation, recordEvent, isSubmitting, playSecurityAlarm]);
 
   // Format Time Remaining `MM:SS`
   const formatTime = (seconds: number) => {
@@ -330,21 +540,6 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
   const answeredCount = Object.keys(answers).length;
   const unansweredCount = questions.length - answeredCount;
   const markedCount = Object.values(markedForReview).filter(Boolean).length;
-  const handleProctorViolation = useCallback((type: ProctorEvent['event_type'], severity: ProctorSeverity, title: string, message: string) => {
-    setStrikeCount(prev => {
-      const newCount = prev + 1;
-      const action = evaluateStrikes(newCount);
-      
-      recordEvent(type, severity, `${title}: ${message}`, 1.0, 0, { strikeCount: newCount, action });
-      
-      if (action === 'TERMINATE') {
-        handleFinalSubmit(); // Auto terminate
-      } else {
-        setWarningModalInfo({ title, message, severity });
-      }
-      return newCount;
-    });
-  }, [recordEvent, handleFinalSubmit]);
 
   const handleProctorSignal = useCallback((s: ProctorSignal) => {
     switch (s.type) {
@@ -393,7 +588,18 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
   useProctoring(videoRef, !isSubmitting, handleProctorSignal);
 
   return (
-    <div className="exam-engine-root" style={{ minHeight: '100vh', background: '#f7f8fa', color: '#101828', paddingBottom: 60 }}>
+    <div 
+      className="exam-engine-root" 
+      style={{ 
+        minHeight: '100vh', 
+        background: '#f7f8fa', 
+        color: '#101828', 
+        paddingBottom: 60,
+        filter: (!isFullScreen || !isWindowFocused) ? 'blur(20px) grayscale(80%)' : 'none',
+        pointerEvents: (!isFullScreen || !isWindowFocused) ? 'none' : 'auto',
+        transition: 'filter 0.2s ease'
+      }}
+    >
       
       {/* Top Fixed Examination Header - Minimal Subtle White */}
       <header style={{
@@ -430,6 +636,14 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
             </div>
             <div style={{ fontSize: 12, color: '#475467', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>Candidate: <strong>{candidateProfile.name}</strong> ({candidateProfile.candidateId})</span>
+              {retakeCount > 0 && (
+                <>
+                  <span>•</span>
+                  <span style={{ color: '#b54708', fontWeight: 700, background: '#fffaeb', padding: '1px 6px', borderRadius: 4, border: '1px solid #fedf89' }}>
+                    Retake #{retakeCount}
+                  </span>
+                </>
+              )}
               <span>•</span>
               <span style={{ color: '#155eef' }}>{isSyncing ? '🔄 Syncing...' : `✓ Saved ${lastSavedTimestamp}`}</span>
             </div>
@@ -1012,13 +1226,112 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
         </div>
       )}
 
+      {/* FULL-SCREEN & FOCUS LOCKDOWN OVERLAY - Obscures test content when not in fullscreen or focus is lost */}
+      {(!isFullScreen || !isWindowFocused) && !isSubmitting && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.94)',
+          backdropFilter: 'blur(16px)',
+          zIndex: 99990,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+          textAlign: 'center'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            border: '2px solid #fda29b',
+            borderRadius: 20,
+            padding: '36px 32px',
+            maxWidth: 520,
+            width: '100%',
+            boxShadow: '0 25px 50px -12px rgba(220, 38, 38, 0.35)'
+          }}>
+            <div style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              background: '#fef3f2',
+              color: '#d92d20',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 20px',
+              border: '4px solid #fee4e2'
+            }}>
+              <AlertTriangle size={36} />
+            </div>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 800, color: '#101828', margin: '0 0 10px' }}>
+              {!isFullScreen ? 'Full-Screen Lockdown Violated' : 'Exam Window Focus Lost'}
+            </h2>
+            
+            <p style={{ fontSize: 15, color: '#475467', lineHeight: 1.6, margin: '0 0 20px' }}>
+              {!isFullScreen 
+                ? 'You have exited full-screen mode. Examination questions and answer options are locked and obscured to prevent window switching, screen sharing, and external browsing.'
+                : 'Application focus shifted away from the examination window. Dual screens, split screen windows, and external applications are prohibited. Click below to return focus.'}
+            </p>
+
+            <div style={{
+              background: '#fffbfa',
+              border: '1px solid #ffd8d6',
+              borderRadius: 8,
+              padding: '12px',
+              marginBottom: 24,
+              color: '#b42318',
+              fontSize: 14,
+              fontWeight: 700
+            }}>
+              Security Alert: Strike {strikeCount} of 3 {strikeCount >= 3 ? '(Disqualified)' : ''}
+              {tabSwitchCountRef.current > 0 && ` • Tab Switches: ${tabSwitchCountRef.current}/2`}
+            </div>
+
+            <button
+              onClick={reEnterFullscreen}
+              style={{
+                width: '100%',
+                padding: '14px 20px',
+                background: '#155eef',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 10,
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 12px rgba(21, 94, 239, 0.3)',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#124ec4'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#155eef'}
+            >
+              ↗ {!isFullScreen ? 'Re-Enter Full-Screen Mode to Resume Test' : 'Return Focus & Resume Test'}
+            </button>
+          </div>
+        </div>
+      )}
+
       <WarningModal
         isOpen={!!warningModalInfo}
         title={warningModalInfo?.title || ''}
         message={warningModalInfo?.message || ''}
         strikeCount={strikeCount}
         maxStrikes={3}
-        onAcknowledge={() => setWarningModalInfo(null)}
+        buttonText={
+          strikeCount >= 3 
+            ? 'Exam Terminated - Proceed to Submission' 
+            : !isFullScreen 
+              ? '🔒 Re-Enter Full-Screen Mode to Resume Test' 
+              : undefined
+        }
+        onAcknowledge={() => {
+          setWarningModalInfo(null);
+          if (!document.fullscreenElement && !isSubmitting) {
+            reEnterFullscreen();
+          }
+        }}
       />
 
     </div>

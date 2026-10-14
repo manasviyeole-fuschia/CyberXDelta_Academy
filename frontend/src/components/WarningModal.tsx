@@ -7,6 +7,7 @@ interface WarningModalProps {
   message: string;
   strikeCount: number;
   maxStrikes: number;
+  buttonText?: string;
   onAcknowledge: () => void;
 }
 
@@ -16,14 +17,32 @@ export const WarningModal: React.FC<WarningModalProps> = ({
   message,
   strikeCount,
   maxStrikes,
+  buttonText,
   onAcknowledge
 }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (isOpen) {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(850, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(420, ctx.currentTime + 0.35);
+          gain.gain.setValueAtTime(0.25, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        }
+      } catch {}
       if (!audioRef.current) {
-        audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // short alert beep
+        audioRef.current = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
       }
       audioRef.current.play().catch(() => {});
     }
@@ -90,7 +109,9 @@ export const WarningModal: React.FC<WarningModalProps> = ({
           fontSize: 14,
           fontWeight: 700
         }}>
-          Warning {strikeCount} of {maxStrikes}
+          {strikeCount >= maxStrikes 
+            ? `Final Violation: Strike ${strikeCount} of ${maxStrikes} (Session Terminated)` 
+            : `Security Violation: Strike ${strikeCount} of ${maxStrikes}`}
         </div>
 
         <button
@@ -110,7 +131,11 @@ export const WarningModal: React.FC<WarningModalProps> = ({
           onMouseEnter={(e) => e.currentTarget.style.background = '#b42318'}
           onMouseLeave={(e) => e.currentTarget.style.background = '#d92d20'}
         >
-          I Understand & Acknowledge
+          {buttonText 
+            ? buttonText 
+            : strikeCount >= maxStrikes 
+              ? 'Exam Terminated - Proceed to Submission' 
+              : 'I Understand & Acknowledge Violation'}
         </button>
       </div>
     </div>

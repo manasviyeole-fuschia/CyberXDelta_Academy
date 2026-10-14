@@ -280,5 +280,221 @@
     "score": 65,
     "status": "DELIVERED",
     "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-01T14:41:50.969Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-01T14:54:42.531Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Manoj Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-01T14:54:42.589Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Manoj Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-08T11:23:33.625Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-08T11:26:44.634Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "manasvi",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-08T11:32:56.777Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "m@gmail.com",
+    "candidate_name": "ma",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-08T11:52:17.893Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviy@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-09T14:30:15.828Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviy@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-09T14:34:11.473Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviy@g,ail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T04:54:27.542Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviy@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:07:54.908Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviy@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:24:11.305Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasvi@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:24:44.056Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasvi@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:25:14.687Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasvi@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:26:19.920Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasvi@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:35:10.258Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "man@gmail.com",
+    "candidate_name": "Manasvi Y",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T05:37:31.850Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "man@gmail.com",
+    "candidate_name": "Manasvi Y",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-11T07:08:39.953Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviy@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-13T13:55:10.091Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "mansviyeole@gmaiil.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-13T14:13:48.585Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-13T14:16:11.865Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-13T14:16:45.025Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "manasviyeole@gmail.com",
+    "candidate_name": "Manasvi Yeole",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-13T16:00:27.930Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "m@gmail.com",
+    "candidate_name": "man",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-10-13T16:06:17.441Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "m@gmail.com",
+    "candidate_name": "man",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
   }
 ]

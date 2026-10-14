@@ -81,6 +81,7 @@ app.get('/api/v1/courses', (req: Request, res: Response) => {
 
 app.get('/api/v1/assessments/questions', (req: Request, res: Response) => {
     const levelParam = (req.query.level as string) || '';
+    const shouldShuffle = req.query.shuffle === 'true' || req.query.shuffle === '1';
 
     let targetDifficulty = 'Intermediate'; // Default for Analyst/Engineer
     if (levelParam.includes('Fresher') || levelParam.includes('Student')) {
@@ -93,6 +94,14 @@ app.get('/api/v1/assessments/questions', (req: Request, res: Response) => {
     // Apply filtering if a valid level was passed
     if (levelParam) {
         filteredQuestions = QUESTIONS.filter(q => q.difficulty === targetDifficulty);
+    }
+
+    if (shouldShuffle) {
+        filteredQuestions = [...filteredQuestions];
+        for (let i = filteredQuestions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [filteredQuestions[i], filteredQuestions[j]] = [filteredQuestions[j], filteredQuestions[i]];
+        }
     }
 
     const publicQuestions = filteredQuestions.map(q => ({

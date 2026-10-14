@@ -1,27 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, Mic, UserCheck, Wifi, FileCheck2, 
-  AlertCircle, CheckCircle2, RefreshCw, Sparkles, User, Mail, IdCard
+  AlertCircle, CheckCircle2, RefreshCw, Sparkles, User, Mail, IdCard, RotateCcw
 } from 'lucide-react';
 import type { CandidateProfile, PreTestChecksState } from '../types';
 import { FaceDetector, FilesetResolver } from '@mediapipe/tasks-vision';
 
 interface PreTestVerificationProps {
   selectedRole: string;
+  initialProfile?: CandidateProfile | null;
+  retakeCount?: number;
+  maxRetakes?: number;
   onVerificationComplete: (profile: CandidateProfile, stream: MediaStream) => void;
   onCancel: () => void;
 }
 
 export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
   selectedRole,
+  initialProfile,
+  retakeCount = 0,
+  maxRetakes = 3,
   onVerificationComplete,
   onCancel
 }) => {
   // Candidate Form
-  const [candidateName, setCandidateName] = useState('');
-  const [candidateEmail, setCandidateEmail] = useState('');
-  const [candidateId] = useState(`CXD-${Math.floor(100000 + Math.random() * 900000)}`);
-  const [experienceLevel, setExperienceLevel] = useState('Intermediate (3-5 Years)');
+  const [candidateName, setCandidateName] = useState(initialProfile?.name || '');
+  const [candidateEmail, setCandidateEmail] = useState(initialProfile?.email || '');
+  const [candidateId] = useState(initialProfile?.candidateId || `CXD-${Math.floor(100000 + Math.random() * 900000)}`);
+  const [experienceLevel, setExperienceLevel] = useState(initialProfile?.experienceLevel || 'Intermediate (3-5 Years)');
   const [consentChecked, setConsentChecked] = useState(false);
 
   // Status of the 8 Mandatory Checks
@@ -272,13 +278,36 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
       candidateId: candidateId,
       targetRole: selectedRole,
       experienceLevel: experienceLevel,
-      photoSnapshot: capturedPhoto || undefined
+      photoSnapshot: capturedPhoto || undefined,
+      retake_count: retakeCount
     };
     onVerificationComplete(profile, mediaStream);
   };
 
   return (
     <div className="precheck-container" style={{ maxWidth: 1040, margin: '0 auto', padding: '10px 10px 40px' }}>
+      
+      {retakeCount > 0 && (
+        <div style={{
+          padding: '10px 16px',
+          marginBottom: 16,
+          background: '#eff8ff',
+          border: '1px solid #b2ddff',
+          borderRadius: 12,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          color: '#175cd3',
+          fontSize: 13,
+          fontWeight: 600,
+          boxShadow: '0 1px 2px rgba(16, 24, 40, 0.05)'
+        }}>
+          <RotateCcw size={16} color="#155eef" />
+          <span>
+            Retake Attempt #{retakeCount + 1} ({retakeCount} of {maxRetakes} retakes used) • Test questions will be randomized in a new shuffled order.
+          </span>
+        </div>
+      )}
       
       {/* Header Banner - Minimal Subtle White */}
       <div style={{

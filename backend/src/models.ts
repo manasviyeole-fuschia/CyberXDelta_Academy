@@ -175,7 +175,8 @@ export const ProctorSessionStartRequestSchema = z.object({
     target_role: z.string().default("Analyst / Engineer"),
     experience_level: z.string().default("Intermediate"),
     test_duration_minutes: z.number().default(30),
-    verification_snapshot: z.string().optional()
+    verification_snapshot: z.string().optional(),
+    retake_count: z.number().optional().default(0)
 });
 export type ProctorSessionStartRequest = z.infer<typeof ProctorSessionStartRequestSchema>;
 

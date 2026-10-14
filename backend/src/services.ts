@@ -569,6 +569,7 @@ export interface ProctorSessionRecord {
     score?: number;
     readiness_level?: string;
     verification_snapshot?: string;
+    retake_count?: number;
     risk_breakdown: {
         visual_gaze_score: number;
         tab_browser_score: number;
@@ -848,7 +849,20 @@ export const startProctorSession = async (req: {
     experience_level?: string;
     test_duration_minutes?: number;
     verification_snapshot?: string;
+    retake_count?: number;
 }) => {
+    const candidateEmail = req.candidate_email.trim().toLowerCase();
+    const completedSessions = PROCTOR_SESSIONS_STORE.filter(
+        s => s.candidate_email && s.candidate_email.trim().toLowerCase() === candidateEmail && (s.status === 'COMPLETED' || s.status === 'AUTO_SUBMITTED')
+    );
+
+    const retakeCount = req.retake_count !== undefined ? req.retake_count : completedSessions.length;
+
+    // Strict validation: maximum 3 retakes permitted (4 attempts total: 1 initial + 3 retakes)
+    if (retakeCount > 3 || completedSessions.length >= 4) {
+        throw new Error("Maximum retake limit of 3 exceeded for this candidate.");
+    }
+
     const sessionId = `proc_cxd_${uuidv4().substring(0, 8)}`;
     const candidateId = req.candidate_id || `cxd-cand-${Math.floor(1000 + Math.random() * 9000)}`;
 
@@ -868,6 +882,7 @@ export const startProctorSession = async (req: {
         risk_level: "Normal",
         review_status: "Normal",
         verification_snapshot: req.verification_snapshot || "",
+        retake_count: retakeCount,
         events: [],
         answers: [],
         risk_breakdown: {
@@ -887,6 +902,7 @@ export const startProctorSession = async (req: {
     return {
         session_id: sessionId,
         candidate_id: candidateId,
+        retake_count: retakeCount,
         test_duration_minutes: newSession.test_duration_minutes,
         start_time: newSession.start_time,
         status: newSession.status,

@@ -145,6 +145,7 @@ export interface ProctorSessionRecord {
   score?: number;
   readiness_level?: string;
   verification_snapshot?: string;
+  retake_count?: number;
   risk_breakdown: RiskBreakdown;
   created_at: string;
   updated_at: string;
@@ -168,5 +169,6 @@ export interface CandidateProfile {
   targetRole: string;
   experienceLevel: string;
   photoSnapshot?: string;
+  retake_count?: number;
 }
 

@@ -1,72 +1,81 @@
 # CyberXDelta Academy Platform - Technical Walkthrough
 
 ## 🌟 High-Level Overview
-CyberXDelta Academy is a comprehensive, industry-grade online diagnostic assessment and AI proctoring platform designed for Identity and Access Management (IAM) professionals.
-
-The project is built as a full-stack TypeScript application:
-- **Frontend:** React 19, Vite, Tailwind/CSS, Lucide Icons
-- **Backend:** Node.js, Express
-- **AI Integration:** `@mediapipe/tasks-vision` for client-side, real-time proctoring.
+CyberXDelta Academy is an industry-grade online diagnostic assessment and AI proctoring platform designed specifically for Identity and Access Management (IAM) professionals. It uses client-side AI to provide real-time exam proctoring without compromising candidate privacy, as the AI processing happens entirely on their machine.
 
 ---
 
-## 🧩 Core Frontend Components
+## 💻 Tech Stack
+The project is set up as a modern full-stack TypeScript application divided into a `frontend` and `backend`.
+
+### Frontend
+*   **Framework**: React 19 with Vite for lightning-fast builds.
+*   **Language**: TypeScript for end-to-end type safety.
+*   **Styling**: Tailwind CSS for responsive and dynamic styling.
+*   **AI Integration**: `@mediapipe/tasks-vision` (Google's MediaPipe) for client-side, real-time proctoring (Face and Object detection).
+*   **Other Libraries**: `lucide-react` for beautiful icons, `recharts` for data visualization, and `canvas-confetti` for celebratory UI elements.
+
+### Backend
+*   **Runtime**: Node.js
+*   **Framework**: Express 5.x
+*   **Language**: TypeScript (`tsx` and `ts-node` for execution).
+*   **Utilities**: `zod` for robust schema validation, `nodemailer` for email communications, `uuid` for session tracking, and `cors` for cross-origin requests.
+
+### Deployment & Infrastructure
+*   **Netlify**: Configuration is present (`netlify.toml`) suggesting the frontend (and potentially backend serverless functions) is deployed or targeted for Netlify.
+
+---
+
+## 🔄 How Everything Works (The Data Flow)
+
+The platform is divided into three core user journeys:
 
 ### 1. Pre-Test Verification Wizard
-**Location:** `frontend/src/components/PreTestVerification.tsx`
-
-This component acts as the secure gateway to the exam, ensuring the candidate's hardware and environment are compliant before allowing them to begin.
-
-**Key Features:**
-- **8-Step Mandatory Checks:** Validates authentication, camera/microphone streams, network stability, and fullscreen readiness.
-- **AI Face & Liveness Detection:** Uses MediaPipe's `FaceDetector` to continuously scan the camera feed and ensure exactly one human face is present before allowing the candidate to proceed.
-- **Audio Diagnostics:** Connects to the Web Audio API to monitor ambient noise and ensure the microphone is active and the environment is quiet.
-- **Identity Snapshot:** Automatically captures a baseline photo snapshot of the candidate when all checks pass, which is sent to the backend for audit purposes.
+**(File: `frontend/src/components/PreTestVerification.tsx`)**
+Before a candidate can start the exam, they must pass this secure gateway.
+*   **Hardware & Environment Checks:** Validates camera, microphone streams, network stability, and enforces fullscreen mode.
+*   **Liveness Detection:** Uses MediaPipe's AI to scan the camera feed and ensures exactly *one* human face is present.
+*   **Audio Diagnostics:** Hooks into the Web Audio API to monitor ambient noise, ensuring the testing environment is sufficiently quiet.
+*   **Identity Snapshot:** Once all 8 mandatory checks pass, it captures a baseline photo snapshot of the candidate and sends it to the backend for audit purposes.
 
 ### 2. AI-Proctored Exam Engine
-**Location:** `frontend/src/components/ExamEngine.tsx`
-
-The core assessment interface where candidates take the 30-minute timed diagnostic exam under strict AI supervision.
-
-**Key Features:**
-- **Real-time Video Proctoring:** Runs MediaPipe's `FaceDetector` and `ObjectDetector` locally on the candidate's machine in real-time.
-- **Anomaly Detection:** Programmed to trigger warnings for:
-  - Looking away from the screen for extended periods.
-  - Secondary persons entering the camera frame.
-  - Unauthorized objects (like mobile phones) detected in the frame.
-- **Incident Auditing:** When an anomaly triggers, the engine creates a "Proctor Event" (categorized as WARNING or CRITICAL), captures a snapshot of the camera feed at that exact moment as evidence, and syncs it to the backend.
-- **Continuous Telemetry:** Sends heartbeat pings and continuous auto-saves to prevent data loss.
+**(File: `frontend/src/components/ExamEngine.tsx`)**
+This is the core assessment interface where candidates take a 30-minute timed diagnostic exam.
+*   **Real-time Local Proctoring:** The engine runs MediaPipe locally in the browser to continuously monitor the webcam feed. 
+*   **Anomaly Detection:** It actively looks for rule violations such as:
+    *   The candidate looking away from the screen.
+    *   A secondary person entering the camera frame.
+    *   Unauthorized objects (like cellphones) detected in the frame.
+*   **Incident Auditing & Telemetry:** If an anomaly is detected, it logs a "Proctor Event" (Warning or Critical), captures a snapshot of the exact moment as evidence, and quietly syncs it to the backend. It also sends continuous heartbeat pings to prevent data loss.
 
 ### 3. Admin / Proctor Command Center
-**Location:** `frontend/src/components/AdminProctorCenter.tsx`
+**(File: `frontend/src/components/AdminProctorCenter.tsx`)**
+A secure dashboard where human reviewers and administrators can oversee the exam integrity.
+*   **Session Review Dashboard:** Admins can view all candidates and filter them by status (e.g., Needs Review, Flagged).
+*   **Evidence Review:** Admins can compare the baseline verification photo against any flagged incident snapshots to manually verify if cheating occurred.
+*   **Manual Intervention:** They can append notes to a session and officially mark it as "Reviewed" or "Rejected".
 
-A secure dashboard for human reviewers and administrators to oversee the exams.
+### 4. The Backend API
+**(Directory: `backend/src/`)**
+The Node.js/Express server acts as the central source of truth.
+*   **Session Management:** Initializes exam sessions with candidate profiles and their baseline photos.
+*   **Heartbeat & Telemetry:** Listens for the continuous pings from the `ExamEngine` to confirm candidates are actively engaged.
+*   **Event Storage:** Receives and stores incident logs and Base64 image snapshots generated by the frontend AI.
 
-**Key Features:**
-- **Session Review Dashboard:** Admins can view all candidate sessions and filter them by status (e.g., Needs Review, Flagged, In Progress).
-- **Telemetry & Event Auditing:** For any given candidate, admins can view their baseline verification photo alongside any flagged proctoring events and the specific evidence snapshots captured during the exam.
-- **Manual Intervention:** Admins can append "proctor notes" to a session and officially mark it as "Reviewed" or "Rejected" based on the evidence.
+### 5. Retake Enforcement & Question Randomization
+**(Files: `frontend/src/App.tsx`, `frontend/src/components/ResultsDashboard.tsx`, `frontend/src/services/api.ts`, `backend/src/index.ts`, `backend/src/services.ts`)**
+*   **3 Retake Maximum Limit:** Candidates are permitted a maximum of 3 retakes after their initial diagnostic exam (4 total attempts). Attempt and retake counts are tracked in both React state, client `localStorage` (keyed by candidate email), and enforced strictly by backend session validation.
+*   **Locked State on Results Dashboard:** Once 3 retakes are exhausted, the "Retake Test" button transitions to a disabled locked state (`Retake Limit Reached (3/3)`), and an informational warning banner notifies the candidate that all attempts have been used.
+*   **Streamlined Retake Flow:** Clicking "Retake Test" preserves the candidate's verified name, email, and target role, and routes directly to the Pre-Test Verification wizard for clearance.
+*   **Question Order Shuffling:** In every retake (`retake_count > 0`), questions are dynamically randomized using an unbiased Fisher-Yates algorithm supported both on the backend (`/api/v1/assessments/questions?shuffle=true`) and in the client-side question engine fallback.
 
----
+### 6. Anti-Tampering & Screen/Tab Switching Lockdown
+**(Files: `frontend/src/components/ExamEngine.tsx`, `frontend/src/components/WarningModal.tsx`)**
+*   **Instant Screen Blanking & Obfuscation:** The microsecond full-screen mode is dropped or window focus is lost (`document.hidden`, `window.blur`, `fullscreenchange`), the entire exam canvas is instantaneously masked with a heavy 20px Gaussian blur and grayscale filter with pointer interactions disabled (`pointerEvents: none`).
+*   **Zero-Tolerance Tab Switching Enforcement:**
+    *   **Live Absence Watchdog:** When a candidate navigates away from the active exam tab, a live watchdog timer begins. If the candidate remains away for more than 5 seconds, the exam is **immediately auto-terminated and submitted** as an integrity breach.
+    *   **2-Switch Hard Ceiling:** Candidates are permitted at most 1 brief grace switch (< 5s) accompanied by an audio alert siren and critical violation strike. A 2nd tab switch triggers immediate automatic termination.
+*   **Focus Loss & Multi-Screen Prevention:** Dual monitors and split screens are intercepted via `window.blur`. Leaving the exam window triggers an instant focus lockdown overlay obscuring questions and starts the 5-second auto-termination timer.
+*   **Enforced Full-Screen Re-Entry:** Dropping full-screen displays an impenetrable lockdown barrier. Questions cannot be viewed or interacted with until full-screen integrity is physically restored via browser API (`document.documentElement.requestFullscreen()`).
+*   **Boundary & Tamper Interception:** Top viewport perimeter tracking (`mouseleave`), browser exit confirmations (`beforeunload`), right-click context menu blocking, and key combinations (`Ctrl+Tab`, `Alt+Tab`, `Ctrl+T`, `Ctrl+W`, `F11`, `F12`) are intercepted to prevent cheating shortcuts.
 
-## ⚙️ Backend Architecture
-
-**Location:** `backend/src/` (specifically `index.ts`, `services.ts`, and `models.ts`)
-
-The backend is a Node.js/Express server that acts as the source of truth and telemetry receiver for the frontend.
-
-**Key Responsibilities:**
-- **Session Initialization:** Receives candidate profiles and the initial verification snapshots to begin an exam session.
-- **Heartbeat Monitoring:** Accepts continuous pings from the `ExamEngine` to confirm the candidate is still connected and actively taking the exam.
-- **Proctoring Event Storage:** Exposes an endpoint to receive and store the incident logs (and Base64 snapshots) generated by the frontend AI models.
-- **Admin Data Retrieval:** Serves the aggregated session data and proctoring telemetry back to the `AdminProctorCenter` for human review.
-
----
-
-## 🔄 The Overall Data Flow
-
-1. **Onboarding:** Candidate opens the app and hits the `PreTestVerification` wizard. AI confirms their environment is secure and takes a baseline photo.
-2. **Exam Start:** The frontend creates a new session via the backend API.
-3. **Assessment & Proctoring:** Candidate enters `ExamEngine`. They answer questions while the client-side AI continuously monitors their webcam. Any anomalies are immediately POSTed to the backend.
-4. **Completion:** Exam auto-submits when the timer hits zero or the candidate finishes manually.
-5. **Review:** An administrator opens the `AdminProctorCenter`, fetches the candidate's session data from the backend, reviews the AI-flagged incidents and snapshots, and makes a final integrity decision.

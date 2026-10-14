@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, CheckCircle2, Printer, RotateCcw, Award, Lock, X, MessageCircle
+  Printer, RotateCcw, Award, Lock, X, MessageCircle, AlertCircle
 } from 'lucide-react';
 import type { AssessmentResult, LeadInfo, ProctorEvent, RiskBreakdown, Course } from '../types';
 import { scheduleConsultation } from '../services/api';
@@ -14,16 +14,18 @@ interface ResultsDashboardProps {
   riskBreakdown?: RiskBreakdown;
   timeSpentSeconds?: number;
   verificationSnapshot?: string;
+  retakeCount?: number;
+  maxRetakes?: number;
   onRetake: () => void;
 }
 
 export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
   result,
   leadInfo,
-  events = [],
+  events: _events = [],
   riskScore = 8,
-  riskLevel = 'Normal',
-  riskBreakdown = {
+  riskLevel: _riskLevel = 'Normal',
+  riskBreakdown: _riskBreakdown = {
     visual_gaze_score: 4,
     tab_browser_score: 0,
     audio_anomaly_score: 4,
@@ -31,6 +33,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     tampering_score: 0
   },
   timeSpentSeconds = 1680,
+  retakeCount = 0,
+  maxRetakes = 3,
   onRetake,
 }) => {
   const [activeTab, setActiveTab] = useState<'skills' | 'proctor' | 'review'>('skills');
@@ -90,29 +94,51 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             IAM Assessment & Proctoring Audit
           </h2>
           <p style={{ color: '#475467', fontSize: 14, margin: 0 }}>
-            Candidate: <strong>{leadInfo?.name || 'Verified Candidate'}</strong> ({leadInfo?.email || 'N/A'}) • Time Spent: {formatSeconds(timeSpentSeconds)}
+            Candidate: <strong>{leadInfo?.name || 'Verified Candidate'}</strong> ({leadInfo?.email || 'N/A'}) • Time Spent: {formatSeconds(timeSpentSeconds)} • Attempt: <strong style={{ color: retakeCount >= maxRetakes ? '#d92d20' : '#155eef' }}>{retakeCount + 1} of {maxRetakes + 1}</strong> {retakeCount > 0 ? `(Retake ${retakeCount}/${maxRetakes})` : '(Initial Attempt)'}
           </p>
         </div>
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button
-            onClick={onRetake}
-            style={{
-              background: '#ffffff',
-              border: '1px solid #d0d5dd',
-              color: '#344054',
-              padding: '8px 16px',
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              cursor: 'pointer'
-            }}
-          >
-            <RotateCcw size={14} /> Retake Test
-          </button>
+          {retakeCount >= maxRetakes ? (
+            <button
+              disabled
+              title="Maximum retakes reached (3 of 3 used)"
+              style={{
+                background: '#f2f4f7',
+                border: '1px solid #d0d5dd',
+                color: '#98a2b3',
+                padding: '8px 16px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'not-allowed'
+              }}
+            >
+              <Lock size={14} /> Retake Limit Reached ({retakeCount}/{maxRetakes})
+            </button>
+          ) : (
+            <button
+              onClick={onRetake}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #d0d5dd',
+                color: '#344054',
+                padding: '8px 16px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                cursor: 'pointer'
+              }}
+            >
+              <RotateCcw size={14} /> Retake Test ({maxRetakes - retakeCount} left)
+            </button>
+          )}
           <button
             onClick={() => window.print()}
             style={{
@@ -133,6 +159,27 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             <Printer size={14} /> Save Report / PDF
           </button>
         </div>
+
+        {retakeCount >= maxRetakes && (
+          <div style={{
+            width: '100%',
+            marginTop: 14,
+            padding: '10px 16px',
+            background: '#fef3f2',
+            border: '1px solid #fee4e2',
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            color: '#b42318',
+            fontSize: 13
+          }}>
+            <AlertCircle size={18} color="#d92d20" />
+            <span>
+              <strong>Maximum Retake Limit Reached!</strong>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Navigation Sub-Tabs - Minimal */}

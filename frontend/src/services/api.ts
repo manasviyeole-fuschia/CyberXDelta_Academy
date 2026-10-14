@@ -266,16 +266,27 @@ export const CORRECT_ANSWERS_MAP: Record<string, { answer: number; exp: string }
   "q-pam-2": { answer: 0, exp: "CyberArk PSM proxies sessions, injects credentials transparently without disclosing them to the user, and audits keystrokes." }
 };
 
-export async function fetchQuestions(role?: string, level?: string): Promise<QuestionPublic[]> {
+export function shuffleArray<T>(array: T[]): T[] {
+  const result = [...array];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+export async function fetchQuestions(role?: string, level?: string, shuffle?: boolean): Promise<QuestionPublic[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/assessments/questions?role=${encodeURIComponent(role || '')}&level=${encodeURIComponent(level || '')}`);
+    const shuffleQuery = shuffle ? '&shuffle=true' : '';
+    const res = await fetch(`${API_BASE_URL}/assessments/questions?role=${encodeURIComponent(role || '')}&level=${encodeURIComponent(level || '')}${shuffleQuery}`);
     if (res.ok) {
-      return await res.json();
+      const data: QuestionPublic[] = await res.json();
+      return shuffle ? shuffleArray(data) : data;
     }
   } catch (err) {
     console.warn("Backend API unavailable, using local question bank fallback.", err);
   }
-  return FALLBACK_QUESTIONS;
+  return shuffle ? shuffleArray(FALLBACK_QUESTIONS) : FALLBACK_QUESTIONS;
 }
 
 export async function evaluateAssessment(
@@ -440,6 +451,7 @@ export async function startProctorSessionApi(candidate: {
   experience_level?: string;
   test_duration_minutes?: number;
   verification_snapshot?: string;
+  retake_count?: number;
 }): Promise<{ session_id: string; candidate_id: string; start_time: string }> {
   try {
     const res = await fetch(`${API_BASE_URL}/proctor/session/start`, {
