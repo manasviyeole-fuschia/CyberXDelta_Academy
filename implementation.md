@@ -669,3 +669,27 @@ backend/src/
 | Low-end machines lag | Adaptive FPS, GPU delegate, lightweight model |
 | Privacy or regulatory exposure | Consent, minimisation, retention job, legal review |
 | Model or CDN outage during exam | Self-host models, `PROCTOR_UNAVAILABLE` fallback to manual review |
+
+---
+
+## 13. UI Redesign & Report Standardization Updates (October 30, 2026)
+
+### 13.1 Landing Page & Navigation Overhaul
+- **Light Tech Background**: Implemented `TechBackground.tsx` rendering subtle orbital radar rings and constellation node networks (`zIndex: -1`) strictly behind cards, text, and interactive elements.
+- **Header Refinements**:
+  - Embedded `https://academy.cyberxdelta.com` directly behind the **About** navigation link.
+  - Removed "Sign In" button and "Browse All Courses" secondary button for a cleaner, unified call-to-action (**Start Free Assessment →**).
+  - Integrated 4 diagnostic feature highlight pills (`10 Questions`, `Covers 5 Major IAM Domains`, `Personalized Learning Roadmap`, `Instant Report`).
+  - Removed "Admin Proctor Center" from candidate avatar menu to prevent unauthorized proctor configuration during live assessments.
+
+### 13.2 Professional Proctored Test Engine
+- **Distraction-Free Environment**: Enforced conditional rendering in `App.tsx` ensuring `TechBackground` is completely disabled when `currentScreen === 'quiz'`.
+- **Option Badge Refinement**: Removed the heavy solid blue dot fill upon selecting answer options, replacing it with a clean, branded rounded-square badge (`border-radius: 8px`, `#eff8ff` background, `#155eef` border/text).
+- **Anti-Tamper & Security**: Preserved full-screen enforcement, window blur detection, right-click blocking, and keyboard shortcut interceptors.
+
+### 13.3 Standardized 1-Page Certification Report (PDF)
+- **Single-Page Constraint**: Excluded live cohort sales cards and WhatsApp counseling forms (`no-print`) from the printable view.
+- **Center-Aligned Header**: Centered the official `CYBERXDELTA EXAMINATION CERTIFICATION REPORT` and audit title.
+- **Structured Candidate Dossier**: Replaced inline candidate text with a dedicated multi-line credentials card displaying Candidate Name, Email, Time Spent, and Attempt Status.
+- **Domain Proficiency & Readiness**: Full-page responsive print layout displaying the Diagnostic Readiness Score ring/percentage and domain-level bar charts on a single clean page.
+
