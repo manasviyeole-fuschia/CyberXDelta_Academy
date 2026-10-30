@@ -839,15 +839,15 @@ export const ExamEngine: React.FC<ExamEngineProps> = ({
                     <div style={{
                       width: 26,
                       height: 26,
-                      borderRadius: '50%',
-                      border: `2px solid ${isSelected ? '#155eef' : '#d0d5dd'}`,
-                      background: isSelected ? '#155eef' : '#ffffff',
+                      borderRadius: 8,
+                      border: isSelected ? '1.5px solid #155eef' : '1.5px solid #d0d5dd',
+                      background: isSelected ? '#eff8ff' : '#ffffff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: 12,
                       fontWeight: 700,
-                      color: isSelected ? '#ffffff' : '#667085',
+                      color: isSelected ? '#155eef' : '#667085',
                       flexShrink: 0,
                       marginTop: 2
                     }}>

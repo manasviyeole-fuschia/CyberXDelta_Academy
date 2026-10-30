@@ -72,7 +72,7 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
     <section className="screen active" style={{ maxWidth: 1120, margin: '0 auto', padding: '10px 10px 40px' }}>
       
       {/* Top Results Banner - Minimal Subtle White */}
-      <div style={{
+      <div className="report-header-banner" style={{
         background: '#ffffff',
         border: '1px solid #e4e7ec',
         borderRadius: 16,
@@ -85,20 +85,23 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         gap: 16,
         boxShadow: '0 1px 3px rgba(16, 24, 40, 0.05)'
       }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#155eef', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+        <div style={{ flex: 1 }}>
+          <div className="report-heading-row" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#155eef', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
             <Award size={14} />
             <span>CyberXDelta Examination Certification Report</span>
           </div>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#101828', margin: '6px 0 4px' }}>
+          <h2 className="report-audit-title" style={{ fontSize: 24, fontWeight: 800, color: '#101828', margin: '6px 0 4px' }}>
             IAM Assessment & Proctoring Audit
           </h2>
-          <p style={{ color: '#475467', fontSize: 14, margin: 0 }}>
-            Candidate: <strong>{leadInfo?.name || 'Verified Candidate'}</strong> ({leadInfo?.email || 'N/A'}) • Time Spent: {formatSeconds(timeSpentSeconds)} • Attempt: <strong style={{ color: retakeCount >= maxRetakes ? '#d92d20' : '#155eef' }}>{retakeCount + 1} of {maxRetakes + 1}</strong> {retakeCount > 0 ? `(Retake ${retakeCount}/${maxRetakes})` : '(Initial Attempt)'}
-          </p>
+          <div className="candidate-details-box" style={{ color: '#475467', fontSize: 14, margin: 0 }}>
+            <div>Candidate: <strong>{leadInfo?.name || 'Verified Candidate'}</strong></div>
+            <div>Email: <strong>{leadInfo?.email || 'N/A'}</strong></div>
+            <div>Time Spent: <strong>{formatSeconds(timeSpentSeconds)}</strong></div>
+            <div>Attempt: <strong style={{ color: retakeCount >= maxRetakes ? '#d92d20' : '#155eef' }}>{retakeCount + 1} of {maxRetakes + 1}</strong> {retakeCount > 0 ? `(Retake ${retakeCount}/${maxRetakes})` : '(Initial Attempt)'}</div>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div className="no-print" style={{ display: 'flex', gap: 10 }}>
           {retakeCount >= maxRetakes ? (
             <button
               disabled
@@ -183,7 +186,9 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
       </div>
 
       {/* Navigation Sub-Tabs - Minimal */}
-      <div style={{
+      <div 
+        className="no-print"
+        style={{
         display: 'flex',
         gap: 8,
         marginBottom: 20,
@@ -293,8 +298,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
             </div>
           </div>
 
-          {/* Recommended Masterclass Cohorts */}
-          <div style={{
+          {/* Recommended Masterclass Cohorts (Online only, hidden in PDF/Print) */}
+          <div className="no-print" style={{
             background: '#ffffff',
             border: '1px solid #e4e7ec',
             borderRadius: 16,
@@ -426,8 +431,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         </div>
       )}
 
-      {/* Contact & WhatsApp Message Box Section - Minimal Subtle White with WhatsApp Accent */}
-      <div style={{
+      {/* Contact & WhatsApp Message Box Section (Online only, hidden in PDF/Print) */}
+      <div className="no-print" style={{
         marginTop: 36,
         background: '#ffffff',
         border: '1.5px solid #25D366',

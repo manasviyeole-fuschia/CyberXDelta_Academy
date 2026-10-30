@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Camera, Mic, UserCheck, Wifi, FileCheck2, 
+import {
+  Camera, Mic, UserCheck, Wifi, FileCheck2,
   AlertCircle, CheckCircle2, RefreshCw, Sparkles, User, Mail, IdCard, RotateCcw
 } from 'lucide-react';
 import type { CandidateProfile, PreTestChecksState } from '../types';
@@ -181,7 +181,7 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
                 return prev;
               });
             }
-          } catch(e) {
+          } catch (e) {
             console.warn(e);
           }
         }
@@ -253,12 +253,12 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
       document.removeEventListener('fullscreenchange', handleFsChange);
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       if (faceAnimFrameRef.current) cancelAnimationFrame(faceAnimFrameRef.current);
-      if (audioContextRef.current) audioContextRef.current.close().catch(() => {});
+      if (audioContextRef.current) audioContextRef.current.close().catch(() => { });
       if (faceDetectorRef.current) faceDetectorRef.current.close();
     };
   }, []);
 
-  const allChecksPassed = 
+  const allChecksPassed =
     checks.authValid &&
     checks.cameraPassed &&
     checks.micPassed &&
@@ -286,7 +286,7 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
 
   return (
     <div className="precheck-container" style={{ maxWidth: 1040, margin: '0 auto', padding: '10px 10px 40px' }}>
-      
+
       {retakeCount > 0 && (
         <div style={{
           padding: '10px 16px',
@@ -308,7 +308,7 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
           </span>
         </div>
       )}
-      
+
       {/* Header Banner - Minimal Subtle White */}
       <div style={{
         background: '#ffffff',
@@ -385,10 +385,10 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
 
       {/* Main Grid: 2 Columns */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(440px, 1fr))', gap: 24 }}>
-        
+
         {/* Left Column: Live Vision HUD & Hardware Feeds */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          
+
           {/* Live Camera View Card */}
           <div style={{
             background: '#ffffff',
@@ -447,11 +447,33 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
                 padding: 12
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ background: 'rgba(0,0,0,0.65)', padding: '4px 8px', borderRadius: 4, fontSize: 11, color: '#38bdf8', fontFamily: 'monospace' }}>
-                    AI ENGINE: ACTIVE (FPS: 30)
+                  <div style={{
+                    background: 'rgba(15, 23, 42, 0.75)',
+                    padding: '4px 10px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    color: '#34d399',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>
+                    Camera Active
                   </div>
-                  <div style={{ background: 'rgba(0,0,0,0.65)', padding: '4px 8px', borderRadius: 4, fontSize: 11, color: '#10b981', fontFamily: 'monospace' }}>
-                    LUX: OPTIMAL
+                  <div style={{
+                    background: 'rgba(15, 23, 42, 0.75)',
+                    padding: '4px 10px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    color: '#f87171',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444' }}></span>
+                    REC 00:00:24
                   </div>
                 </div>
 
@@ -472,15 +494,30 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ background: 'rgba(0,0,0,0.7)', padding: '4px 8px', borderRadius: 4, fontSize: 11, color: '#fff' }}>
-                    Candidate ID: {candidateId}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: 'rgba(15, 23, 42, 0.85)',
+                  padding: '6px 12px',
+                  borderRadius: 8
+                }}>
+                  <div style={{ fontSize: 12, color: '#f8fafc', fontWeight: 600 }}>
+                    Candidate ID: <span style={{ color: '#38bdf8' }}>{candidateId}</span>
                   </div>
-                  {capturedPhoto && (
-                    <div style={{ background: '#12b76a', color: '#fff', padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 700 }}>
-                      ✓ ID Snapshot Stored
-                    </div>
-                  )}
+                  <div style={{
+                    background: capturedPhoto ? '#12b76a' : '#155eef',
+                    color: '#fff',
+                    padding: '3px 10px',
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4
+                  }}>
+                    ✓ Snapshot Stored
+                  </div>
                 </div>
               </div>
             </div>
@@ -551,7 +588,7 @@ export const PreTestVerification: React.FC<PreTestVerificationProps> = ({
 
         {/* Right Column: Candidate Authentication & Clearance Checklist */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          
+
           {/* Candidate Profile Form */}
           <div style={{
             background: '#ffffff',

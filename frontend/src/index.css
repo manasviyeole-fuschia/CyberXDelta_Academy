@@ -22,10 +22,18 @@
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: #f4f8fe;
+  background-image: 
+    radial-gradient(ellipse at 85% 15%, rgba(21, 94, 239, 0.08) 0%, rgba(255, 255, 255, 0) 55%),
+    radial-gradient(ellipse at 15% 75%, rgba(14, 165, 233, 0.06) 0%, rgba(255, 255, 255, 0) 50%),
+    radial-gradient(circle at 50% 50%, rgba(21, 94, 239, 0.02) 0%, rgba(255, 255, 255, 0) 65%),
+    radial-gradient(rgba(21, 94, 239, 0.10) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px;
+  background-attachment: fixed;
   color: var(--ink);
   font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
 
 button, input, textarea {
@@ -36,11 +44,15 @@ button, input, textarea {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .top {
   height: 68px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -79,6 +91,8 @@ main {
   padding: 56px 24px 80px;
   width: 100%;
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .eyebrow {
@@ -332,8 +346,8 @@ h2 {
 }
 
 .option.selected b {
-  background: var(--brand);
-  color: #fff;
+  background: #eff8ff;
+  color: var(--brand);
   border-color: var(--brand);
 }
 
@@ -535,3 +549,117 @@ h2 {
     padding-top: 32px;
   }
 }
+
+/* ==========================================================================
+   PRINT / PDF REPORT STYLING
+   ========================================================================== */
+@media print {
+  @page {
+    margin: 8mm 10mm;
+    size: portrait;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #101828 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-size: 14px !important;
+  }
+
+  .tech-background-layer {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  header.top,
+  .top,
+  .header-nav,
+  .no-print,
+  button,
+  .actions {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .shell {
+    min-height: auto !important;
+    background: #ffffff !important;
+    position: static !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  .screen {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Single Full-Page Box Layout */
+  .report-header-banner {
+    box-shadow: none !important;
+    border: 2px solid #101828 !important;
+    border-radius: 12px !important;
+    background: #ffffff !important;
+    padding: 24px 28px !important;
+    margin-bottom: 20px !important;
+    display: block !important;
+    text-align: center !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .report-heading-row {
+    justify-content: center !important;
+    text-align: center !important;
+    font-size: 14px !important;
+    letter-spacing: 0.1em !important;
+    margin-bottom: 8px !important;
+  }
+
+  .report-audit-title {
+    text-align: center !important;
+    font-size: 26px !important;
+    margin: 8px 0 16px !important;
+  }
+
+  .candidate-details-box {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    text-align: left !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 8px !important;
+    padding: 14px 18px !important;
+    margin-top: 14px !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+  }
+
+  .card,
+  .metric,
+  .chart-card,
+  .preview {
+    box-shadow: none !important;
+    border: 1.5px solid #d0d5dd !important;
+    background: #ffffff !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  h1, h2, h3, h4, strong, b {
+    color: #101828 !important;
+  }
+}
+

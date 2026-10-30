@@ -6,6 +6,7 @@ import type {
 import { fetchQuestions, startProctorSessionApi, submitProctorSessionApi } from './services/api';
 import { Header } from './components/Header';
 import { Landing } from './components/Landing';
+import { TechBackground } from './components/TechBackground';
 import { RoleSelect } from './components/RoleSelect';
 import { PreTestVerification } from './components/PreTestVerification';
 import { ExamEngine } from './components/ExamEngine';
@@ -207,7 +208,9 @@ export function App() {
 
   return (
     <div className="shell">
-      <Header onReset={handleReset} onOpenAdmin={() => setIsAdminOpen(true)} />
+      {/* Show radiant cyber-tech background only on landing and non-proctored screens */}
+      {currentScreen !== 'quiz' && <TechBackground />}
+      <Header onReset={handleReset} onOpenAdmin={() => setIsAdminOpen(true)} isLanding={currentScreen === 'landing'} />
 
       <main>
         {loading && (
