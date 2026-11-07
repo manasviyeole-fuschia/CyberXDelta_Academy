@@ -496,5 +496,32 @@
     "score": 65,
     "status": "DELIVERED",
     "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-11-05T08:25:55.807Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "rahul@gmail.com",
+    "candidate_name": "Rahul Sharma",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-11-05T08:35:11.875Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "rohhan@gmail.com",
+    "candidate_name": "Rohhan Gandhi",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
+  },
+  {
+    "timestamp": "2026-11-05T08:41:01.505Z",
+    "type": "ASSESSMENT_REPORT",
+    "to_email": "rohhan@gmail.com",
+    "candidate_name": "Rohhan Gandhi",
+    "score": 65,
+    "status": "DELIVERED",
+    "note": "Email recorded & dispatched (Configure SMTP in backend/.env for live inbox delivery)"
   }
 ]

@@ -1,3 +1,4 @@
+import { CERTIFICATE_BG_BASE64 } from '../certificate_bg_data';
 import React, { useState } from 'react';
 import { 
   Printer, RotateCcw, Award, Lock, X, MessageCircle, AlertCircle
@@ -70,6 +71,9 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
 
   return (
     <section className="screen active" style={{ maxWidth: 1120, margin: '0 auto', padding: '10px 10px 40px' }}>
+      
+      {/* SCREEN-ONLY RESULTS DASHBOARD (100% Preserved Layout) */}
+      <div className="no-print">
       
       {/* Top Results Banner - Minimal Subtle White */}
       <div className="report-header-banner" style={{
@@ -565,6 +569,8 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
         </div>
       </div>
 
+      </div> {/* End screen-only web dashboard */}
+
       {/* COURSE LOCKED POPUP MODAL */}
       {lockedCourseModal && (
         <div
@@ -724,6 +730,151 @@ export const ResultsDashboard: React.FC<ResultsDashboardProps> = ({
           </div>
         </div>
       )}
+
+
+      {/* PRINT-ONLY CERTIFICATE OF ACHIEVEMENT */}
+      <div className="print-only" style={{ display: 'none' }}>
+        <div className="certificate-print-page" style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: 780,
+          margin: '0 auto',
+          aspectRatio: '723 / 1024',
+          boxSizing: 'border-box'
+        }}>
+          {/* Certificate Background Image (Inline Data URI guaranteed to render immediately in print preview) */}
+          <img
+            src={CERTIFICATE_BG_BASE64}
+            alt="Certificate Background"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              zIndex: 0,
+              pointerEvents: 'none'
+            }}
+          />
+          {/* CyberXDelta Brand Logo seamlessly baked into certificate template */}
+
+          {/* Certificate Content Body */}
+          <div style={{
+            position: 'absolute',
+            top: '42.5%',
+            left: '10%',
+            right: '10%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            padding: '8px 14px',
+            boxSizing: 'border-box'
+          }}>
+            {/* Recipient Presentation Text */}
+            <p style={{
+              fontSize: 13,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              fontStyle: 'italic',
+              fontFamily: '"Playfair Display", Georgia, "Times New Roman", serif',
+              color: '#0f172a',
+              fontWeight: 700,
+              margin: '0 0 10px'
+            }}>
+              This is proudly presented to
+            </p>
+
+            <h1 style={{
+              fontSize: 38,
+              fontWeight: 700,
+              fontStyle: 'italic',
+              fontFamily: '"Playfair Display", Georgia, "Times New Roman", serif',
+              color: '#0b192c',
+              margin: '0 0 12px',
+              letterSpacing: '0.2px',
+              borderBottom: '2.5px solid #d4af37',
+              paddingBottom: 6,
+              display: 'inline-block',
+              minWidth: 340
+            }}>
+              {leadInfo?.name || 'Verified Candidate'}
+            </h1>
+
+            <p style={{
+              fontSize: 16,
+              lineHeight: 1.55,
+              color: '#0f172a',
+              maxWidth: 570,
+              margin: '12px auto 0',
+              fontWeight: 800
+            }}>
+              for successfully completing the rigorous <strong>CyberXDelta Identity and Access Management (IAM) Proctored Diagnostic Assessment</strong> and validating technical competence with an overall score of:
+            </p>
+          </div>
+
+          {/* Prominent Score Percentage Centered Directly Above 3-Star Badge */}
+          <div style={{
+            position: 'absolute',
+            top: '65%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center',
+            width: '100%',
+            pointerEvents: 'none'
+          }}>
+            <div style={{
+              fontSize: 62,
+              fontWeight: 900,
+              color: '#0f3775',
+              letterSpacing: '-0.5px',
+              lineHeight: 1,
+              display: 'inline-block'
+            }}>
+              {overallScore}%
+            </div>
+          </div>
+
+          {/* Bottom Authority & Date Row directly over the template signature lines */}
+          <div style={{
+            position: 'absolute',
+            top: '78.5%',
+            left: '12%',
+            right: '12%',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            boxSizing: 'border-box',
+            pointerEvents: 'none'
+          }}>
+            {/* Left: Date */}
+            <div style={{
+              width: 200,
+              textAlign: 'center',
+              fontSize: 18,
+              fontWeight: 900,
+              color: '#0b192c',
+              letterSpacing: '0.3px'
+            }}>
+              {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
+            </div>
+
+            {/* Right: CyberXDelta Academy */}
+            <div style={{
+              width: 200,
+              textAlign: 'center',
+              fontFamily: '"Times New Roman", Times, serif',
+              fontSize: 18,
+              fontWeight: 900,
+              color: '#0b192c',
+              letterSpacing: '0.3px'
+            }}>
+              CyberXDelta Academy
+            </div>
+          </div>
+        </div>
+      </div>
 
     </section>
   );

@@ -44,13 +44,13 @@
     "name": "Manasvi Yeole",
     "email": "manasviyeole@gmail.com",
     "phone": "",
-    "target_role": "Analyst / Engineer",
-    "experience_level": "Intermediate (3-5 Years)",
-    "assessment_id": "proc_client_9pemlrd",
+    "target_role": "Fresher / Student",
+    "experience_level": "Fresher / Student (< 1 Year)",
+    "assessment_id": "proc_client_licgvsk",
     "consultation_requested": true,
     "notes": "Score: 90%",
-    "id": "lead_677dec64",
-    "created_at": "2026-10-13T14:16:45.021Z"
+    "id": "lead_af09d3f1",
+    "created_at": "2026-11-05T07:25:11.773Z"
   },
   {
     "name": "Manasvi Yeole",
@@ -117,5 +117,23 @@
     "assessment_id": "proc_cxd_a4d73113",
     "id": "lead_f556d8a5",
     "created_at": "2026-10-13T13:55:10.081Z"
+  },
+  {
+    "name": "Rahul Sharma",
+    "email": "rahul@gmail.com",
+    "target_role": "Fresher / Student",
+    "experience_level": "Intermediate (3-5 Years)",
+    "assessment_id": "proc_cxd_90464cfa",
+    "id": "lead_4161a643",
+    "created_at": "2026-11-05T08:25:55.803Z"
+  },
+  {
+    "name": "Rohhan Gandhi",
+    "email": "rohhan@gmail.com",
+    "target_role": "Fresher / Student",
+    "experience_level": "Intermediate (3-5 Years)",
+    "assessment_id": "proc_cxd_871a4da9",
+    "id": "lead_d44054e7",
+    "created_at": "2026-11-05T08:41:01.501Z"
   }
 ]
